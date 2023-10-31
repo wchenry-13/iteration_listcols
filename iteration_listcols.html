@@ -397,7 +397,7 @@ l</code></pre>
 ## 
 ## $summary
 ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-## -3.87503 -0.64568  0.02101  0.02988  0.69315  3.48651</code></pre>
+## -3.34621 -0.69628 -0.03818 -0.03467  0.60916  2.60527</code></pre>
 </div>
 <div id="accessing-lists" class="section level2">
 <h2>accessing lists</h2>
@@ -440,7 +440,7 @@ is.list(list_norms)</code></pre>
 <pre><code>## # A tibble: 1 × 2
 ##    mean    sd
 ##   &lt;dbl&gt; &lt;dbl&gt;
-## 1  2.80  1.27</code></pre>
+## 1  3.09  1.29</code></pre>
 <pre class="r"><code>output = vector(&quot;list&quot;, length = 4)
 
 for (i in 1:4) {
@@ -460,6 +460,217 @@ output = map(list_norms, median)</code></pre>
 </div>
 <div id="map-variants" class="section level2">
 <h2>map variants</h2>
+<pre class="r"><code>output = map_dbl(list_norms, median, .id = &quot;input&quot;)</code></pre>
+<pre class="r"><code>output = map_dfr(list_norms, mean_and_sd, .id = &quot;input&quot;)</code></pre>
+</div>
+<div id="listcols" class="section level2">
+<h2>listcols</h2>
+<pre class="r"><code>listcol_df = 
+  tibble(
+    name = c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;),
+    samp = list_norms
+  )
+
+#select(name, mean_sd)
+#mutate</code></pre>
+<pre class="r"><code>listcol_df |&gt; pull(name)</code></pre>
+<pre><code>## [1] &quot;a&quot; &quot;b&quot; &quot;c&quot; &quot;d&quot;</code></pre>
+<pre class="r"><code>listcol_df |&gt; pull(samp)</code></pre>
+<pre><code>## $a
+##  [1] 4.1167014 2.5315120 2.7805451 2.0978382 3.8274774 1.7650462 3.6249695
+##  [8] 1.9761354 3.1667267 3.6061653 4.3416468 2.6516760 5.0688355 3.8189089
+## [15] 0.1746964 4.4155124 4.1582203 0.5247806 4.1064468 3.1390434
+## 
+## $b
+##  [1]  11.3456727   5.9696877  -3.0408679 -18.2854885  -6.5565882   6.4293170
+##  [7] -11.4055102   4.1436023   9.0062133  -3.0758943  13.0003447   3.9518695
+## [13]  -2.1886567   6.9204404  -5.5898870   2.1098286  -1.1293127  -0.8939935
+## [19]  -0.7890528   1.6436571
+## 
+## $c
+##  [1]  9.761666 10.155803 10.164839 10.075450 10.131571  9.959632  9.830077
+##  [8] 10.146088  9.926755 10.105179  9.941165 10.309463 10.213879  9.767701
+## [15]  9.600381 10.018405 10.009739  9.884838 10.088678  9.897752
+## 
+## $d
+##  [1] -4.7895319 -2.8276372 -2.4187767 -0.1837965 -2.2841913 -3.5759570
+##  [7] -3.7648757 -2.5387411 -3.4536920 -1.8038136 -1.5768571 -3.1243207
+## [13] -2.4673061 -3.0827536 -2.3968280 -2.8994961 -4.3634200 -3.2278364
+## [19] -3.1217984 -2.2206286</code></pre>
+<pre class="r"><code>listcol_df$samp[[1]]</code></pre>
+<pre><code>##  [1] 4.1167014 2.5315120 2.7805451 2.0978382 3.8274774 1.7650462 3.6249695
+##  [8] 1.9761354 3.1667267 3.6061653 4.3416468 2.6516760 5.0688355 3.8189089
+## [15] 0.1746964 4.4155124 4.1582203 0.5247806 4.1064468 3.1390434</code></pre>
+<pre class="r"><code>mean_and_sd(listcol_df$samp[[1]])</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1  3.09  1.29</code></pre>
+<pre class="r"><code>map(listcol_df$samp, mean_and_sd)</code></pre>
+<pre><code>## $a
+## # A tibble: 1 × 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1  3.09  1.29
+## 
+## $b
+## # A tibble: 1 × 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1 0.578  7.62
+## 
+## $c
+## # A tibble: 1 × 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1  10.0 0.176
+## 
+## $d
+## # A tibble: 1 × 2
+##    mean    sd
+##   &lt;dbl&gt; &lt;dbl&gt;
+## 1 -2.81  1.01</code></pre>
+<p>#NSDUH</p>
+<pre class="r"><code>nsduh_table &lt;- function(html, table_num) {
+  
+  table = 
+    html |&gt; 
+    html_table() |&gt; 
+    nth(table_num) |&gt;
+    slice(-1) |&gt; 
+    select(-contains(&quot;P Value&quot;)) |&gt;
+    pivot_longer(
+      -State,
+      names_to = &quot;age_year&quot;, 
+      values_to = &quot;percent&quot;) |&gt;
+    separate(age_year, into = c(&quot;age&quot;, &quot;year&quot;), sep = &quot;\\(&quot;) |&gt;
+    mutate(
+      year = str_replace(year, &quot;\\)&quot;, &quot;&quot;),
+      percent = str_replace(percent, &quot;[a-c]$&quot;, &quot;&quot;),
+      percent = as.numeric(percent)) |&gt;
+    filter(!(State %in% c(&quot;Total U.S.&quot;, &quot;Northeast&quot;, &quot;Midwest&quot;, &quot;South&quot;, &quot;West&quot;)))
+  
+  table
+}</code></pre>
+<pre class="r"><code>nsduh_url = &quot;http://samhda.s3-us-gov-west-1.amazonaws.com/s3fs-public/field-uploads/2k15StateFiles/NSDUHsaeShortTermCHG2015.htm&quot;
+
+nsduh_html = read_html(nsduh_url)
+
+output = vector(&quot;list&quot;, 3)
+
+for (i in c(1, 4, 5)) {
+  output[[i]] = nsduh_table(nsduh_html, i)
+}
+
+nsduh_results = bind_rows(output)</code></pre>
+</div>
+<div id="again-using-maps" class="section level2">
+<h2>again using maps</h2>
+<pre class="r"><code>nsduh_df = 
+  tibble(
+    name = c(&quot;marj&quot;, &quot;coke&quot;, &quot;heroin&quot;),
+    number = c(1,4,5)
+  )
+
+#map(nsduh_df$number, nsduh_import, html = nsduh_html)</code></pre>
+</div>
+<div id="operations-on-nested-data" class="section level2">
+<h2>operations on nested data</h2>
+<pre class="r"><code>weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c(&quot;USW00094728&quot;, &quot;USW00022534&quot;, &quot;USS0023B17S&quot;),
+    var = c(&quot;PRCP&quot;, &quot;TMIN&quot;, &quot;TMAX&quot;), 
+    date_min = &quot;2021-01-01&quot;,
+    date_max = &quot;2022-12-31&quot;) |&gt;
+  mutate(
+    name = recode(
+      id, 
+      USW00094728 = &quot;CentralPark_NY&quot;, 
+      USW00022534 = &quot;Molokai_HI&quot;,
+      USS0023B17S = &quot;Waterhole_WA&quot;),
+    tmin = tmin / 10,
+    tmax = tmax / 10) |&gt;
+  select(name, id, everything())</code></pre>
+<pre><code>## Registered S3 method overwritten by &#39;hoardr&#39;:
+##   method           from
+##   print.cache_info httr</code></pre>
+<pre><code>## using cached file: /Users/wynterhenry/Library/Caches/org.R-project.R/R/rnoaa/noaa_ghcnd/USW00094728.dly</code></pre>
+<pre><code>## date created (size, mb): 2023-09-28 10:06:27 (8.524)</code></pre>
+<pre><code>## file min/max dates: 1869-01-01 / 2023-09-30</code></pre>
+<pre><code>## using cached file: /Users/wynterhenry/Library/Caches/org.R-project.R/R/rnoaa/noaa_ghcnd/USW00022534.dly</code></pre>
+<pre><code>## date created (size, mb): 2023-09-28 10:06:37 (3.83)</code></pre>
+<pre><code>## file min/max dates: 1949-10-01 / 2023-09-30</code></pre>
+<pre><code>## using cached file: /Users/wynterhenry/Library/Caches/org.R-project.R/R/rnoaa/noaa_ghcnd/USS0023B17S.dly</code></pre>
+<pre><code>## date created (size, mb): 2023-09-28 10:06:40 (0.994)</code></pre>
+<pre><code>## file min/max dates: 1999-09-01 / 2023-09-30</code></pre>
+<pre class="r"><code>weather_nest = 
+  nest(weather_df, data = date:tmin)
+
+weather_nest</code></pre>
+<pre><code>## # A tibble: 3 × 3
+##   name           id          data              
+##   &lt;chr&gt;          &lt;chr&gt;       &lt;list&gt;            
+## 1 CentralPark_NY USW00094728 &lt;tibble [730 × 4]&gt;
+## 2 Molokai_HI     USW00022534 &lt;tibble [730 × 4]&gt;
+## 3 Waterhole_WA   USS0023B17S &lt;tibble [730 × 4]&gt;</code></pre>
+<pre class="r"><code>weather_nest |&gt; pull(name)</code></pre>
+<pre><code>## [1] &quot;CentralPark_NY&quot; &quot;Molokai_HI&quot;     &quot;Waterhole_WA&quot;</code></pre>
+<pre class="r"><code>weather_nest |&gt; pull(data)</code></pre>
+<pre><code>## [[1]]
+## # A tibble: 730 × 4
+##    date        prcp  tmax  tmin
+##    &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 2021-01-01   157   4.4   0.6
+##  2 2021-01-02    13  10.6   2.2
+##  3 2021-01-03    56   3.3   1.1
+##  4 2021-01-04     5   6.1   1.7
+##  5 2021-01-05     0   5.6   2.2
+##  6 2021-01-06     0   5     1.1
+##  7 2021-01-07     0   5    -1  
+##  8 2021-01-08     0   2.8  -2.7
+##  9 2021-01-09     0   2.8  -4.3
+## 10 2021-01-10     0   5    -1.6
+## # ℹ 720 more rows
+## 
+## [[2]]
+## # A tibble: 730 × 4
+##    date        prcp  tmax  tmin
+##    &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 2021-01-01     0  27.8  22.2
+##  2 2021-01-02     0  28.3  23.9
+##  3 2021-01-03     0  28.3  23.3
+##  4 2021-01-04     0  30    18.9
+##  5 2021-01-05     0  28.9  21.7
+##  6 2021-01-06     0  27.8  20  
+##  7 2021-01-07     0  29.4  21.7
+##  8 2021-01-08     0  28.3  18.3
+##  9 2021-01-09     0  27.8  18.9
+## 10 2021-01-10     0  28.3  18.9
+## # ℹ 720 more rows
+## 
+## [[3]]
+## # A tibble: 730 × 4
+##    date        prcp  tmax  tmin
+##    &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 2021-01-01   254   3.2   0  
+##  2 2021-01-02   152   0.9  -3.2
+##  3 2021-01-03     0   0.2  -4.2
+##  4 2021-01-04   559   0.9  -3.2
+##  5 2021-01-05    25   0.5  -3.3
+##  6 2021-01-06    51   0.8  -4.8
+##  7 2021-01-07     0   0.2  -5.8
+##  8 2021-01-08    25   0.5  -8.3
+##  9 2021-01-09     0   0.1  -7.7
+## 10 2021-01-10   203   0.9  -0.1
+## # ℹ 720 more rows</code></pre>
+</div>
+<div id="regressing-tmax-on-tmin" class="section level2">
+<h2>regressing tmax on tmin</h2>
+<pre class="r"><code>#central_park_df = 
+ # weather_nest |&gt; 
+ # filter(name == &quot;CentralPark_NY&quot;) |&gt; 
+ # pull(df) |&gt; 
+  #nth(1)</code></pre>
 </div>
 
 
